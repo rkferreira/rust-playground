@@ -1,0 +1,10 @@
+[package]
+name = "kafka-client-test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rdkafka = { version = "0.36.0", features = ["ssl", "sasl"] }
+schema_registry_converter = { version = "4.0.0", features = ["avro", "tokio"] }
