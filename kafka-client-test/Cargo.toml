@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+apache-avro = "0.16.0"
 rdkafka = { version = "0.36.0", features = ["ssl", "sasl"] }
 schema_registry_converter = { version = "4.0.0", features = ["avro", "tokio"] }
+tokio = { version = "1.35.0", features = ["rt-multi-thread"] }
