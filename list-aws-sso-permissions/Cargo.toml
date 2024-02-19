@@ -1,0 +1,11 @@
+[package]
+name = "list-aws-sso-permissions"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aws-config = { version = "1.1.5", features = ["behavior-version-latest"] }
+aws-sdk-ssoadmin = { version = "1.13.0" }
+aws-sdk-organizations = { version = "1.13.0" }
+aws-sdk-identitystore = { version = "1.13.0" }
+tokio = { version = "1", features = ["full"] }
