@@ -41,3 +41,29 @@ vim
 :CocInstall coc-rust-analyzer
 
 ```
+
+### Yaml and Json validations
+
+```
+:CocInstall coc-json
+:CocInstall coc-yaml
+```
+
+
+```
+.vim/coc-settings.json
+
+{
+  "yaml.schemas": {
+    "./schema/environment.json": [
+      "domains/**/environment.*.yaml",
+      "domains/**/environment.*.yml"
+    ],
+    "schema/domain.json": [
+      "domains/**/domain.yaml",
+      "domains/**/domain.yml"
+    ]
+  }
+}
+
+```
