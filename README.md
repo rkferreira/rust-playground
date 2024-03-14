@@ -13,6 +13,8 @@ nvm install node
 
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
+brew install hashicorp/tap/terraform-ls
+
 ```
 
 ```
@@ -51,9 +53,22 @@ vim
 
 
 ```
-.vim/coc-settings.json
+#~/.vim/coc-settings.json
 
 {
+  "rust-analyzer.inlayHints.typeHints.enable": false,
+	"languageserver": {
+		"terraform": {
+			"command": "/opt/homebrew/bin/terraform-ls",
+      "args": ["serve"],
+			"filetypes": [
+				"terraform",
+				"tf"
+			],
+			"initializationOptions": {},
+			"settings": {}
+		}
+	},
   "yaml.schemas": {
     "./schema/environment.json": [
       "domains/**/environment.*.yaml",
