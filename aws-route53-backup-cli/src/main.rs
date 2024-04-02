@@ -8,6 +8,8 @@ const MAX_DOMAIN_THREADS: usize = 2;
 
 #[::tokio::main]
 async fn main() {
+    setup_tracing();
+
     let config      = aws::from_env().region("us-east-1").load().await;
     let client_r53  = aws_route53::Client::new(&config);
     let client_s3   = aws_s3::Client::new(&config);
@@ -48,4 +50,13 @@ async fn main() {
     for task in tasks_writer {
         task.await.unwrap();
     }
+}
+
+fn setup_tracing () {
+    tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(tracing::Level::INFO)
+        .with_thread_ids(true)
+        .with_target(false)
+        .init();
 }

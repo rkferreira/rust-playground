@@ -1,12 +1,8 @@
 use aws_sdk_route53 as aws_route53;
 use aws_sdk_s3 as aws_s3;
-use serde::{Deserialize, Serialize};
-use tokio::io::{self, AsyncWriteExt};
-use tokio::fs::File;
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
-use aws_smithy_types::byte_stream::{ByteStream, AggregatedBytes};
+use chrono::{DateTime, Utc};
+use aws_smithy_types::byte_stream::ByteStream;
 use aws_smithy_types::body::SdkBody;
-use aws_smithy_runtime_api::client::orchestrator::HttpRequest;
 use aws_smithy_runtime_api::client::result::SdkError as SdkError;
 
 mod datahelpers;
@@ -21,6 +17,7 @@ pub struct Domain {
     pub id: String,
 }
 
+#[tracing::instrument(skip(client))]
 pub async fn list_domains(client: aws_route53::Client) -> Vec<Domain> {
     let mut domains: Vec<Domain> = Vec::new();
     let mut resp = client
@@ -50,6 +47,7 @@ pub async fn list_domains(client: aws_route53::Client) -> Vec<Domain> {
     domains
 }
 
+#[tracing::instrument(skip(client))]
 pub async fn list_resource_records(client: aws_route53::Client, hosted_zone: Domain) -> Vec<aws_route53::types::ResourceRecordSet> {
     let mut records: Vec<aws_route53::types::ResourceRecordSet> = Vec::new();
     let mut resp = client
@@ -74,6 +72,7 @@ pub async fn list_resource_records(client: aws_route53::Client, hosted_zone: Dom
     records
 }
 
+#[tracing::instrument(skip(client))]
 pub async fn format_and_write(client: aws_s3::Client, domain: String, records: Vec<aws_route53::types::ResourceRecordSet>) {
     let utc: DateTime<Utc> = Utc::now();
     let utc_day = utc.format("%Y-%m-%d").to_string();
@@ -129,6 +128,7 @@ pub async fn format_and_write(client: aws_s3::Client, domain: String, records: V
     write_to_s3(client.clone(), stream, file_name).await.unwrap();
 }
 
+#[tracing::instrument(skip(client, stream))]
 async fn write_to_s3(client: aws_s3::Client, stream: ByteStream, file_name: String) -> Result<aws_s3::operation::put_object::PutObjectOutput, SdkError<aws_s3::operation::put_object::PutObjectError, aws_smithy_runtime_api::client::orchestrator::HttpResponse>> {
     client.put_object().bucket(AWS_S3_BUCKET).key(&file_name).body(stream).send().await
 }
