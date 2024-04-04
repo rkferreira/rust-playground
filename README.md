@@ -57,6 +57,8 @@ vim
 
 {
   "rust-analyzer.inlayHints.typeHints.enable": false,
+  "rust-analyzer.inlayHints.parameterHints.enable": false,
+  "rust-analyzer.inlayHints.chainingHints.enable": false,
 	"languageserver": {
 		"terraform": {
 			"command": "/opt/homebrew/bin/terraform-ls",
