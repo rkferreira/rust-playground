@@ -132,3 +132,47 @@ pub async fn format_and_write(client: aws_s3::Client, domain: String, records: V
 async fn write_to_s3(client: aws_s3::Client, stream: ByteStream, file_name: String) -> Result<aws_s3::operation::put_object::PutObjectOutput, SdkError<aws_s3::operation::put_object::PutObjectError, aws_smithy_runtime_api::client::orchestrator::HttpResponse>> {
     client.put_object().bucket(AWS_S3_BUCKET).key(&file_name).body(stream).send().await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aws_config::BehaviorVersion;
+    use aws_sdk_route53 as r53;
+    use aws_smithy_runtime::client::http::test_util::{ReplayEvent, StaticReplayClient};
+    use aws_smithy_types::body::SdkBody;
+
+    fn aws_credentials_provider() -> r53::config::Credentials {
+        r53::config::Credentials::new(
+            "access_key".to_string(),
+            "secret_key".to_string(),
+            Some("token".to_string()),
+            None,
+            "name"
+        )
+    }
+
+    #[tokio::test]
+    async fn test_list_domains_2_domains() {
+        let http_request = http::Request::builder()
+            .method("GET")
+            .uri("https://route53.amazonaws.com/2013-04-01/hostedzonesbyname?maxitems=100")
+            .body(SdkBody::empty()).unwrap();
+
+        let http_response = http::Response::builder()
+            .status(200)
+            .body(SdkBody::from(include_str!("./testing/list_domains.xml"))).unwrap();
+
+        let event = ReplayEvent::new(http_request, http_response);
+        let event_client = StaticReplayClient::new(vec![event]);
+        let client = r53::Client::from_conf(
+            r53::Config::builder()
+                .behavior_version(BehaviorVersion::latest())
+                .credentials_provider(aws_credentials_provider())
+                .region(r53::config::Region::new("us-east-1"))
+                .http_client(event_client)
+                .build()
+        );
+        let domains = list_domains(client).await;
+        assert_eq!(domains.len(), 2);
+    }
+}

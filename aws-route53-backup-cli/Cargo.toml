@@ -4,14 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["full", "tracing"] }
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
 aws-sdk-route53 = { version = "1.17.0" }
 aws-sdk-s3 = { version = "1.20.0" }
 serde = { version = "1.0.197", features = ["derive"]}
 serde_json = { version = "1.0.114" }
 chrono = { version = "0.4.35" }
-aws-smithy-types = "1.1.8"
-aws-smithy-runtime-api = "1.2.0"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+mockall = "0.12.1"
+aws-smithy-runtime = { version = "1.2.1", features = ["test-util"] }
+aws-smithy-types = "1.1.8"
+aws-smithy-runtime-api = { version = "1.2.0", features = ["test-util"] }
+http = "1.1.0"
