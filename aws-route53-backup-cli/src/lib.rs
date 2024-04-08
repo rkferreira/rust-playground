@@ -1,14 +1,14 @@
 use aws_sdk_route53 as aws_route53;
 use aws_sdk_s3 as aws_s3;
-use chrono::{DateTime, Utc};
-use aws_smithy_types::byte_stream::ByteStream;
+use aws_smithy_runtime_api::client::result::SdkError;
 use aws_smithy_types::body::SdkBody;
-use aws_smithy_runtime_api::client::result::SdkError as SdkError;
+use aws_smithy_types::byte_stream::ByteStream;
+use chrono::{DateTime, Utc};
 
 mod datahelpers;
 mod optional_formatter;
 
-const AWS_S3_BUCKET:  &str  = "s3-test";
+const AWS_S3_BUCKET: &str = "s3-test";
 const MAX_FILE_ITEMS: usize = 5;
 
 #[derive(Debug, Clone)]
@@ -21,9 +21,11 @@ pub struct Domain {
 pub async fn list_domains(client: aws_route53::Client) -> Vec<Domain> {
     let mut domains: Vec<Domain> = Vec::new();
     let mut resp = client
-                .list_hosted_zones_by_name()
-                .max_items(100)
-                .send().await.unwrap();
+        .list_hosted_zones_by_name()
+        .max_items(100)
+        .send()
+        .await
+        .unwrap();
     for zone in resp.hosted_zones {
         domains.push(Domain {
             name: zone.name,
@@ -36,7 +38,9 @@ pub async fn list_domains(client: aws_route53::Client) -> Vec<Domain> {
             .max_items(100)
             .dns_name(&*resp.next_dns_name.unwrap())
             .hosted_zone_id(&*resp.next_hosted_zone_id.unwrap())
-            .send().await.unwrap();
+            .send()
+            .await
+            .unwrap();
         for zone in resp.hosted_zones {
             domains.push(Domain {
                 name: zone.name,
@@ -48,13 +52,18 @@ pub async fn list_domains(client: aws_route53::Client) -> Vec<Domain> {
 }
 
 #[tracing::instrument(skip(client))]
-pub async fn list_resource_records(client: aws_route53::Client, hosted_zone: Domain) -> Vec<aws_route53::types::ResourceRecordSet> {
+pub async fn list_resource_records(
+    client: aws_route53::Client,
+    hosted_zone: Domain,
+) -> Vec<aws_route53::types::ResourceRecordSet> {
     let mut records: Vec<aws_route53::types::ResourceRecordSet> = Vec::new();
     let mut resp = client
         .list_resource_record_sets()
         .hosted_zone_id(&hosted_zone.id)
         .max_items(100)
-        .send().await.unwrap();
+        .send()
+        .await
+        .unwrap();
     for record in resp.resource_record_sets {
         records.push(record);
     }
@@ -64,7 +73,9 @@ pub async fn list_resource_records(client: aws_route53::Client, hosted_zone: Dom
             .hosted_zone_id(&hosted_zone.id)
             .max_items(100)
             .start_record_name(&*resp.next_record_name.unwrap())
-            .send().await.unwrap();
+            .send()
+            .await
+            .unwrap();
         for record in resp.resource_record_sets {
             records.push(record);
         }
@@ -73,7 +84,11 @@ pub async fn list_resource_records(client: aws_route53::Client, hosted_zone: Dom
 }
 
 #[tracing::instrument(skip(client))]
-pub async fn format_and_write(client: aws_s3::Client, domain: String, records: Vec<aws_route53::types::ResourceRecordSet>) {
+pub async fn format_and_write(
+    client: aws_s3::Client,
+    domain: String,
+    records: Vec<aws_route53::types::ResourceRecordSet>,
+) {
     let utc: DateTime<Utc> = Utc::now();
     let utc_day = utc.format("%Y-%m-%d").to_string();
     let utc_time = utc.format("%H:%M:%S").to_string();
@@ -84,16 +99,16 @@ pub async fn format_and_write(client: aws_s3::Client, domain: String, records: V
     let total_records = records.len();
 
     for record in records {
-        if (record.r#type ==  aws_sdk_route53::types::RrType::Ns) || (record.r#type ==  aws_sdk_route53::types::RrType::Soa) {
+        if (record.r#type == aws_sdk_route53::types::RrType::Ns)
+            || (record.r#type == aws_sdk_route53::types::RrType::Soa)
+        {
             continue;
         }
-        let mut res: datahelpers::Record  = Default::default();
+        let mut res: datahelpers::Record = Default::default();
         let mut resource_records: Vec<datahelpers::ResourceRecord> = Vec::new();
         if let Some(rr) = record.resource_records.to_owned() {
             for r in rr {
-                resource_records.push(datahelpers::ResourceRecord {
-                    value: r.value,
-                });
+                resource_records.push(datahelpers::ResourceRecord { value: r.value });
             }
         }
         // Mandatory fields
@@ -112,8 +127,13 @@ pub async fn format_and_write(client: aws_s3::Client, domain: String, records: V
             };
             let json = serde_json::to_string(&changes).unwrap();
             let stream = ByteStream::new(SdkBody::from(json.as_bytes()));
-            let file_name = format!("{}/{}/{}/{}.json", domain, utc_day, utc_time, file_name_index);
-            write_to_s3(client.clone(), stream, file_name).await.unwrap();
+            let file_name = format!(
+                "{}/{}/{}/{}.json",
+                domain, utc_day, utc_time, file_name_index
+            );
+            write_to_s3(client.clone(), stream, file_name)
+                .await
+                .unwrap();
             formatted_records.clear();
             file_index = 0;
             file_name_index += 1;
@@ -124,13 +144,34 @@ pub async fn format_and_write(client: aws_s3::Client, domain: String, records: V
     };
     let json = serde_json::to_string(&changes).unwrap();
     let stream = ByteStream::new(SdkBody::from(json.as_bytes()));
-    let file_name = format!("{}/{}/{}/{}.json", domain, utc_day, utc_time, file_name_index);
-    write_to_s3(client.clone(), stream, file_name).await.unwrap();
+    let file_name = format!(
+        "{}/{}/{}/{}.json",
+        domain, utc_day, utc_time, file_name_index
+    );
+    write_to_s3(client.clone(), stream, file_name)
+        .await
+        .unwrap();
 }
 
 #[tracing::instrument(skip(client, stream))]
-async fn write_to_s3(client: aws_s3::Client, stream: ByteStream, file_name: String) -> Result<aws_s3::operation::put_object::PutObjectOutput, SdkError<aws_s3::operation::put_object::PutObjectError, aws_smithy_runtime_api::client::orchestrator::HttpResponse>> {
-    client.put_object().bucket(AWS_S3_BUCKET).key(&file_name).body(stream).send().await
+async fn write_to_s3(
+    client: aws_s3::Client,
+    stream: ByteStream,
+    file_name: String,
+) -> Result<
+    aws_s3::operation::put_object::PutObjectOutput,
+    SdkError<
+        aws_s3::operation::put_object::PutObjectError,
+        aws_smithy_runtime_api::client::orchestrator::HttpResponse,
+    >,
+> {
+    client
+        .put_object()
+        .bucket(AWS_S3_BUCKET)
+        .key(&file_name)
+        .body(stream)
+        .send()
+        .await
 }
 
 #[cfg(test)]
@@ -147,7 +188,7 @@ mod tests {
             "secret_key".to_string(),
             Some("token".to_string()),
             None,
-            "name"
+            "name",
         )
     }
 
@@ -156,11 +197,13 @@ mod tests {
         let http_request = http::Request::builder()
             .method("GET")
             .uri("https://route53.amazonaws.com/2013-04-01/hostedzonesbyname?maxitems=100")
-            .body(SdkBody::empty()).unwrap();
+            .body(SdkBody::empty())
+            .unwrap();
 
         let http_response = http::Response::builder()
             .status(200)
-            .body(SdkBody::from(include_str!("./testing/list_domains.xml"))).unwrap();
+            .body(SdkBody::from(include_str!("./testing/list_domains.xml")))
+            .unwrap();
 
         let event = ReplayEvent::new(http_request, http_response);
         let event_client = StaticReplayClient::new(vec![event]);
@@ -170,7 +213,7 @@ mod tests {
                 .credentials_provider(aws_credentials_provider())
                 .region(r53::config::Region::new("us-east-1"))
                 .http_client(event_client)
-                .build()
+                .build(),
         );
         let domains = list_domains(client).await;
         assert_eq!(domains.len(), 2);

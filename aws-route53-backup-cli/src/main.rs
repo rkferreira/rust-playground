@@ -10,10 +10,10 @@ const MAX_DOMAIN_THREADS: usize = 2;
 async fn main() {
     setup_tracing();
 
-    let config      = aws::from_env().region("us-east-1").load().await;
-    let client_r53  = aws_route53::Client::new(&config);
-    let client_s3   = aws_s3::Client::new(&config);
-    let domains     = aws_route53_backup_cli::list_domains(client_r53.clone()).await;
+    let config = aws::from_env().region("us-east-1").load().await;
+    let client_r53 = aws_route53::Client::new(&config);
+    let client_s3 = aws_s3::Client::new(&config);
+    let domains = aws_route53_backup_cli::list_domains(client_r53.clone()).await;
 
     let domains_len = domains.len();
 
@@ -26,13 +26,12 @@ async fn main() {
             if i < domains_len {
                 let client_r53 = client_r53.clone();
                 let domain = domains[i].clone();
-                let name   = domain.name.clone();
-                tasks_domain.push(
-                    tokio::spawn(async move {
-                        let output = aws_route53_backup_cli::list_resource_records(client_r53, domain).await;
-                        (name, output)
-                    })
-                );
+                let name = domain.name.clone();
+                tasks_domain.push(tokio::spawn(async move {
+                    let output =
+                        aws_route53_backup_cli::list_resource_records(client_r53, domain).await;
+                    (name, output)
+                }));
                 i += 1;
             }
         }
@@ -40,11 +39,9 @@ async fn main() {
             let (domain_name, record_set) = task.await.unwrap();
             //println!("output: {} \n {:?}", domain_name, record_set);
             let client_s3 = client_s3.clone();
-            tasks_writer.push(
-                tokio::spawn(async move {
-                    aws_route53_backup_cli::format_and_write(client_s3, domain_name, record_set).await;
-                })
-            );
+            tasks_writer.push(tokio::spawn(async move {
+                aws_route53_backup_cli::format_and_write(client_s3, domain_name, record_set).await;
+            }));
         }
     }
     for task in tasks_writer {
@@ -52,7 +49,7 @@ async fn main() {
     }
 }
 
-fn setup_tracing () {
+fn setup_tracing() {
     tracing_subscriber::fmt()
         .compact()
         .with_max_level(tracing::Level::INFO)

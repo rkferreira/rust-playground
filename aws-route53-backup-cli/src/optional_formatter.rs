@@ -1,5 +1,5 @@
+use crate::datahelpers;
 use aws_sdk_route53 as aws_route53;
-use crate::datahelpers as datahelpers;
 
 pub async fn format(res: &mut datahelpers::Record, record: aws_route53::types::ResourceRecordSet) {
     let record = record.clone();
@@ -30,7 +30,9 @@ pub async fn format(res: &mut datahelpers::Record, record: aws_route53::types::R
     if let Some(failover) = record.failover {
         res.resourcerecordset.failover = match failover {
             aws_route53::types::ResourceRecordSetFailover::Primary => Some("PRIMARY".to_string()),
-            aws_route53::types::ResourceRecordSetFailover::Secondary => Some("SECONDARY".to_string()),
+            aws_route53::types::ResourceRecordSetFailover::Secondary => {
+                Some("SECONDARY".to_string())
+            }
             _ => None,
         };
     }
@@ -64,7 +66,7 @@ pub async fn format(res: &mut datahelpers::Record, record: aws_route53::types::R
             awsregion: geo_proximity.aws_region,
             localzonegroup: geo_proximity.local_zone_group,
             bias: geo_proximity.bias,
-            coordinates: None
+            coordinates: None,
         });
     }
 }

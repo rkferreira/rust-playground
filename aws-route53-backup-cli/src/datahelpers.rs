@@ -6,7 +6,7 @@ pub struct Record {
     #[serde(rename = "Action")]
     pub action: String,
     #[serde(rename = "ResourceRecordSet")]
-    pub resourcerecordset: ResourceRecordSet
+    pub resourcerecordset: ResourceRecordSet,
 }
 
 impl Default for Record {
@@ -29,7 +29,7 @@ impl Default for Record {
                 trafficpolicyinstanceid: None,
                 cidrroutingconfig: None,
                 geoproximitylocation: None,
-            }
+            },
         }
     }
 }
@@ -116,11 +116,11 @@ pub struct GeoProximityLocation {
     pub awsregion: Option<String>,
     pub localzonegroup: Option<String>,
     pub coordinates: Option<Coordinates>,
-    pub bias: Option<i32>
+    pub bias: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Coordinates {
     pub latitude: String,
-    pub longitude: String
+    pub longitude: String,
 }
