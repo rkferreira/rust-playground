@@ -1,0 +1,21 @@
+# Terraform Module Echo (rendered from platform-cli)
+
+module "echo" {
+    source = "git::https://github.com/rkferreira/terraform-echo.git?ref=v0.1.0"
+    foo = {{ module_echo.foo }}
+    bar = "{{ module_echo.bar }}"
+}
+
+provider "aws" {
+    region = "us-east-1"
+    default_tags {
+        tags = {
+            "Team"        = "{{ tags.team }}"
+            "System-Name" = "{{ tags.system_name }}"
+        }
+    }
+}
+
+terraform {
+    backend "local" {}
+}
