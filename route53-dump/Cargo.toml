@@ -1,0 +1,9 @@
+[package]
+name = "route53-dump"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aws-config = "1.5.5"
+aws-sdk-route53 = "1.42.0"
+tokio = { version = "1", features = ["full", "tracing", "macros"] }
