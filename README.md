@@ -84,3 +84,28 @@ vim
 }
 
 ```
+
+### Add Golang support
+
+```
+go install golang.org/x/tools/gopls@latest && cp $GOPATH/bin/gopls /usr/local/bin/ && chmod u+x /usr/local/bin/gopls
+
+:CocInstall coc-go
+
+```
+
+```
+-->> settings.json
+
+      "languageserver": {
+        "golang": {
+          "command": "gopls",
+          "rootPatterns": ["go.mod"],
+          "filetypes": ["go"]
+        }
+      },
+      "go.goplsOptions": {
+        "staticcheck": true
+      }
+
+```
