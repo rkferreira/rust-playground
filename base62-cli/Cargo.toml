@@ -1,0 +1,25 @@
+[package]
+name = "base62_generator"
+version = "0.1.0"
+edition = "2024"
+exclude = [
+    "openspec/**",          # all OpenSpec change folders
+    ".github/**",          # optional, if you don’t want CI files
+    "README.md",           # you may keep it, but you can also exclude it
+    # add any other dev‑only files you don’t need on crates.io
+]
+
+[dependencies]
+base62 = "0.2"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+num-bigint = "0.4"
+num-traits = "0.2"
+num-integer = "0.1"
+hex = "0.4"
+[[bin]]
+name = "base62-cli"
+path = "src/main.rs"
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "2"
