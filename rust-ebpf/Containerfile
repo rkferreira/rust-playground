@@ -1,0 +1,32 @@
+FROM rust:latest
+
+# Install dependencies required for eBPF and container networking
+RUN apt-get update && apt-get install -y \
+    clang \
+    llvm-dev \
+    libclang-dev \
+    libelf-dev \
+    iproute2 \
+    iputils-ping \
+    curl \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install nightly Rust toolchain with rust-src
+RUN rustup toolchain install nightly && \
+    rustup component add rust-src --toolchain nightly
+
+# Install pre-built bpf-linker binary using cargo-binstall (avoids LLVM source compilation issues)
+RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && \
+    cargo binstall -y bpf-linker
+
+WORKDIR /workspace
+COPY . .
+
+# Pre-build eBPF bytecode and userspace binary
+RUN cargo xtask build-ebpf --release && \
+    cargo build --release -p hello-ebpf
+
+# Default command attaches to loopback (lo)
+CMD ["target/release/hello-ebpf", "--iface", "lo"]
+

@@ -1,0 +1,13 @@
+[package]
+name = "hello-ebpf-ebpf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aya-ebpf = { workspace = true }
+aya-log-ebpf = { workspace = true }
+hello-ebpf-common = { path = "../hello-ebpf-common" }
+
+[[bin]]
+name = "hello-ebpf-ebpf"
+path = "src/main.rs"
