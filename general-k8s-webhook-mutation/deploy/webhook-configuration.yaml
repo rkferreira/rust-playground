@@ -1,0 +1,29 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: webhook-mutation-rules
+webhooks:
+  - name: mutate.rules.mutation.webhook.io
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      service:
+        name: webhook-mutation-service
+        namespace: default
+        path: /mutate
+        port: 443
+      # caBundle is automatically patched by the controller when using self-bootstrap mode
+      caBundle: Cg==
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    namespaceSelector:
+      matchExpressions:
+        # Avoid intercepting kube-system pods
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: ["kube-system", "kube-node-lease", "kube-public"]
+    failurePolicy: Fail
+    sideEffects: None
+    timeoutSeconds: 5

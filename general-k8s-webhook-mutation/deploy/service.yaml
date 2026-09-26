@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-mutation-service
+  namespace: default
+  labels:
+    app.kubernetes.io/name: general-k8s-webhook-mutation
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8443
+  selector:
+    app.kubernetes.io/name: general-k8s-webhook-mutation

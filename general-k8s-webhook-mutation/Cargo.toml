@@ -1,0 +1,25 @@
+[package]
+name = "general-k8s-webhook-mutation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+kube = { version = "0.98", default-features = false, features = ["client", "runtime", "derive"] }
+k8s-openapi = { version = "0.24", features = ["v1_30", "schemars"] }
+schemars = { version = "0.8", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+axum = "0.7"
+axum-server = { version = "0.7", features = ["tls-rustls"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["trace"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+json-patch = "3.0"
+rcgen = "0.13"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+thiserror = "2.0"
+base64 = "0.22"
+clap = { version = "4", features = ["derive", "env"] }
+futures = "0.3"

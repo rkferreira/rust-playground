@@ -1,0 +1,159 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mutationrules.mutation.webhook.io
+spec:
+  group: mutation.webhook.io
+  names:
+    categories: []
+    kind: MutationRule
+    plural: mutationrules
+    shortNames: []
+    singular: mutationrule
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Whether the rule is valid
+      jsonPath: .status.valid
+      name: Valid
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Auto-generated derived type for MutationRuleSpec via `CustomResource`
+        properties:
+          spec:
+            description: Custom Resource Definition for generic Kubernetes mutation rules.
+            properties:
+              mutations:
+                description: Set of mutations to apply when the target matches
+                properties:
+                  addAnnotations:
+                    additionalProperties:
+                      type: string
+                    default: {}
+                    description: Annotations to merge into the resource metadata
+                    type: object
+                  addContainers:
+                    default: []
+                    description: Containers (e.g. sidecars) to append to the Pod spec containers
+                    items: {}
+                    type: array
+                  addEnv:
+                    default: []
+                    description: Environment variables to inject into all containers
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          nullable: true
+                          type: string
+                        valueFrom:
+                          nullable: true
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  addInitContainers:
+                    default: []
+                    description: Init containers to append to the Pod spec initContainers
+                    items: {}
+                    type: array
+                  addLabels:
+                    additionalProperties:
+                      type: string
+                    default: {}
+                    description: Labels to merge into the resource metadata
+                    type: object
+                  addVolumeMounts:
+                    default: []
+                    description: Volume mounts to inject into all containers
+                    items: {}
+                    type: array
+                  addVolumes:
+                    default: []
+                    description: Volumes to append to the Pod spec volumes
+                    items: {}
+                    type: array
+                  rawPatches:
+                    default: []
+                    description: Direct RFC 6902 JSON patch operations (advanced flexibility)
+                    items: {}
+                    type: array
+                type: object
+              priority:
+                default: 100
+                description: Execution priority (higher priority rules run first)
+                format: int32
+                type: integer
+              selector:
+                default:
+                  excludeNamespaces: []
+                  kinds: []
+                  matchAnnotations: {}
+                  matchLabels: {}
+                  namespaces: []
+                description: Target selector rules
+                properties:
+                  excludeNamespaces:
+                    default: []
+                    description: Namespaces to explicitly exclude (e.g. ["kube-system", "kube-public"]).
+                    items:
+                      type: string
+                    type: array
+                  kinds:
+                    default: []
+                    description: Kinds to target (e.g. ["Pod", "Deployment"]). Empty means ["Pod"].
+                    items:
+                      type: string
+                    type: array
+                  matchAnnotations:
+                    additionalProperties:
+                      type: string
+                    default: {}
+                    description: Match annotations on the resource metadata
+                    type: object
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    default: {}
+                    description: Match labels on the resource metadata
+                    type: object
+                  namespaces:
+                    default: []
+                    description: Specific namespaces to target. If empty, matches all namespaces (unless excluded).
+                    items:
+                      type: string
+                    type: array
+                type: object
+            required:
+            - mutations
+            type: object
+          status:
+            nullable: true
+            properties:
+              errorMessage:
+                nullable: true
+                type: string
+              observedGeneration:
+                format: int64
+                nullable: true
+                type: integer
+              valid:
+                type: boolean
+            required:
+            - valid
+            type: object
+        required:
+        - spec
+        title: MutationRule
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+

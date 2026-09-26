@@ -1,0 +1,51 @@
+apiVersion: mutation.webhook.io/v1alpha1
+kind: MutationRule
+metadata:
+  name: inject-observability-sidecar
+  namespace: default
+spec:
+  priority: 150
+  selector:
+    kinds: ["Pod"]
+    # Target pods labeled with 'inject-telemetry: "true"'
+    matchLabels:
+      inject-telemetry: "true"
+    # Exclude system namespaces
+    excludeNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+  mutations:
+    # 1. Add standard metadata labels & annotations
+    addLabels:
+      mutated-by: "rust-webhook"
+    addAnnotations:
+      telemetry.observability.io/status: "injected"
+
+    # 2. Inject environment variables into existing application containers
+    addEnv:
+      - name: TELEMETRY_ENABLED
+        value: "true"
+      - name: CLUSTER_REGION
+        value: "us-east-1"
+
+    # 3. Inject sidecar container into the Pod spec
+    addContainers:
+      - name: telemetry-agent
+        image: alpine:latest
+        command: ["/bin/sh", "-c", "echo Telemetry sidecar running && sleep 3600"]
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        volumeMounts:
+          - name: shared-logs
+            mountPath: /var/log/telemetry
+
+    # 4. Inject shared volume into the Pod spec
+    addVolumes:
+      - name: shared-logs
+        emptyDir: {}
